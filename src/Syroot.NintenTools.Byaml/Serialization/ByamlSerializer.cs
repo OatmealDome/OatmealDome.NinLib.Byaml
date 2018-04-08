@@ -388,7 +388,7 @@ namespace Syroot.NintenTools.Byaml.Serialization
             for (int i = 0; i < length; i++)
             {
                 reader.Seek(nodeOffset + offsets[i], SeekOrigin.Begin);
-                stringArray.Add(reader.ReadString(BinaryStringFormat.ZeroTerminated));
+                stringArray.Add(reader.ReadString(StringDataFormat.ZeroTerminated));
             }
             reader.Seek(oldPosition, SeekOrigin.Begin);
 
@@ -579,7 +579,7 @@ namespace Syroot.NintenTools.Byaml.Serialization
             // Write the 0-terminated strings.
             foreach (string str in stringArray)
             {
-                writer.Write(str, BinaryStringFormat.ZeroTerminated);
+                writer.Write(str, StringDataFormat.ZeroTerminated);
             }
         }
 
