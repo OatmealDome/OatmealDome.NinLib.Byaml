@@ -10,7 +10,7 @@
 		<PackageId>Syroot.NintenTools.Byaml</PackageId>
 		<PackageLicenseUrl>https://raw.githubusercontent.com/Syroot/NintenTools.Byaml/master/LICENSE</PackageLicenseUrl>
 		<PackageProjectUrl>https://github.com/Syroot/NintenTools.Byaml</PackageProjectUrl>
-		<PackageReleaseNotes>Added little endian support for Super Mario Maker 3DS.</PackageReleaseNotes>
+		<PackageReleaseNotes>Update NuGet package and framework targets.</PackageReleaseNotes>
 		<PackageTags>byaml;cafe;nintendo;wiiu</PackageTags>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/Syroot/NintenTools.Bfres</RepositoryUrl>
