@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Syroot.BinaryData;
+using OatmealDome.BinaryData;
 using Syroot.NintenTools.Byaml.IO;
 
 namespace Syroot.NintenTools.Byaml.Serialization

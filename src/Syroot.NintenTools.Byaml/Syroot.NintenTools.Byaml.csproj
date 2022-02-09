@@ -19,7 +19,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.4.1" />
-		<PackageReference Include="Syroot.IO.BinaryData" Version="4.0.3" />
+		<PackageReference Include="OatmealDome.BinaryData" Version="1.0.0" />
 		<PackageReference Include="Syroot.Maths" Version="1.5.1" />
 		<PackageReference Include="System.Dynamic.Runtime" Version="4.3.0" />
 	</ItemGroup>
