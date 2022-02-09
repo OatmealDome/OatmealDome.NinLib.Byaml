@@ -1,19 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<AssemblyName>Syroot.NintenTools.Byaml</AssemblyName>
-		<AssemblyTitle>NintenTools.Byaml</AssemblyTitle>
-		<Authors>Syroot</Authors>
+		<AssemblyName>OatmealDome.NinLib.Byaml</AssemblyName>
+		<AssemblyTitle>OatmealDome.NinLib.Byaml</AssemblyTitle>
+		<Authors>Syroot,OatmealDome</Authors>
 		<Copyright>(c) Syroot, licensed under MIT</Copyright>
 		<Description>.NET library providing loading, saving, and serialization support for the Nintendo BYAML format.</Description>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
-		<PackageIconUrl>https://raw.githubusercontent.com/Syroot/NintenTools.Byaml/master/res/Logo.png</PackageIconUrl>
-		<PackageId>Syroot.NintenTools.Byaml</PackageId>
-		<PackageLicenseUrl>https://raw.githubusercontent.com/Syroot/NintenTools.Byaml/master/LICENSE</PackageLicenseUrl>
-		<PackageProjectUrl>https://github.com/Syroot/NintenTools.Byaml</PackageProjectUrl>
+		<PackageIconUrl>https://raw.githubusercontent.com/OatmealDome/OatmealDome.NinLib.Byaml/master/res/Logo.png</PackageIconUrl>
+		<PackageId>OatmealDome.NinLib.Byaml</PackageId>
+		<PackageLicenseUrl>https://raw.githubusercontent.com/OatmealDome/OatmealDome.NinLib.Byaml/master/LICENSE</PackageLicenseUrl>
+		<PackageProjectUrl>https://github.com/OatmealDome/OatmealDome.NinLib.Byaml</PackageProjectUrl>
 		<PackageReleaseNotes>Update NuGet package and framework targets.</PackageReleaseNotes>
 		<PackageTags>byaml;cafe;nintendo;wiiu</PackageTags>
 		<RepositoryType>git</RepositoryType>
-		<RepositoryUrl>https://github.com/Syroot/NintenTools.Bfres</RepositoryUrl>
+		<RepositoryUrl>https://github.com/OatmealDome/OatmealDome.NinLib.Byaml</RepositoryUrl>
 		<TargetFrameworks>net452;netstandard20</TargetFrameworks>
 		<VersionPrefix>2.2.0</VersionPrefix>
 	</PropertyGroup>
