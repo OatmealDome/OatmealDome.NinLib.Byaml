@@ -151,8 +151,22 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 reader.ByteOrder = _settings.ByteOrder;
 
                 // Load the header, specifying magic bytes ("BY"), version and main node offsets.
-                if (reader.ReadUInt16() != _magicBytes) throw new ByamlException("Invalid BYAML header.");
-                if (reader.ReadUInt16() != 0x0001) throw new ByamlException("Unsupported BYAML version.");
+                if (reader.ReadUInt16() != _magicBytes)
+                {
+                    throw new ByamlException("Invalid BYAML header.");
+                }
+                
+                ushort version = reader.ReadUInt16();
+                if (version > (ushort)ByamlVersion.Four)
+                {
+                    throw new ByamlException($"Unsupported BYAML version '{version}'.");
+                }
+                
+                if (_settings.Version.HasValue && (ByamlVersion)version != _settings.Version)
+                {
+                    throw new ByamlException($"Unexpected BYAML version '{version}'.");
+                }
+                
                 uint nameArrayOffset = reader.ReadUInt32();
                 uint stringArrayOffset = reader.ReadUInt32();
                 uint pathArrayOffset = 0;
@@ -363,9 +377,16 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             {
                 throw new ByamlException("Root node must not be null.");
             }
-            else if (!(root is IDictionary<string, dynamic> || root is IEnumerable))
+
+            if (!(root is IDictionary<string, dynamic> || root is IEnumerable))
             {
                 throw new ByamlException($"Type '{root.GetType()}' is not supported as a BYAML root node.");
+            }
+            
+            if (!_settings.Version.HasValue)
+            {
+                throw new ByamlException(
+                    "Version must be specified in ByamlSerializerSettings when serializing a BYAML.");
             }
 
             // Generate the name, string and path array nodes.
@@ -383,7 +404,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
 
                 // Write the header, specifying magic bytes, version and main node offsets.
                 writer.Write(_magicBytes);
-                writer.Write((short)0x0001);
+                writer.Write((ushort)_settings.Version);
                 Offset nameArrayOffset = writer.ReserveOffset();
                 Offset stringArrayOffset = writer.ReserveOffset();
                 Offset pathArrayOffset = _settings.SupportPaths ? writer.ReserveOffset() : null;
