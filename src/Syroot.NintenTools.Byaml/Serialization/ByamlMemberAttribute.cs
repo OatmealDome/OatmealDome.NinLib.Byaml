@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Syroot.NintenTools.Byaml.Serialization
+namespace OatmealDome.NinLib.Byaml.Serialization
 {
     /// <summary>
     /// Decorates fields or properties which are treated as values in BYAML dictionaries.

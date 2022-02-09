@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Syroot.NintenTools.Byaml.Serialization
+namespace OatmealDome.NinLib.Byaml.Serialization
 {
     /// <summary>
     /// Decorates a class which can be serialized with the <see cref="ByamlSerializer"/>.

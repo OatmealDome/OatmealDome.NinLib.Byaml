@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Reflection;
 
-namespace Syroot.NintenTools.Byaml.Serialization
+namespace OatmealDome.NinLib.Byaml.Serialization
 {
     /// <summary>
     /// Represents extension methods for the <see cref="TypeInfo"/> class.

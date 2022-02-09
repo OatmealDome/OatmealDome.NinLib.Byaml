@@ -5,9 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using OatmealDome.BinaryData;
-using Syroot.NintenTools.Byaml.IO;
+using OatmealDome.NinLib.Byaml.IO;
 
-namespace Syroot.NintenTools.Byaml.Dynamic
+namespace OatmealDome.NinLib.Byaml.Dynamic
 {
     /// <summary>
     /// Represents the loading and saving logic of BYAML files and returns the resulting file structure in dynamic

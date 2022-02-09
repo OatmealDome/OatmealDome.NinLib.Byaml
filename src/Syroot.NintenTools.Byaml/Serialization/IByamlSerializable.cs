@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Syroot.NintenTools.Byaml.Serialization
+namespace OatmealDome.NinLib.Byaml.Serialization
 {
     /// <summary>
     /// Represents a class or structure which provides additional code to read or store complex BYAML data.

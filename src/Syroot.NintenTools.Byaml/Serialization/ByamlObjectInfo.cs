@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Syroot.NintenTools.Byaml.Serialization
+namespace OatmealDome.NinLib.Byaml.Serialization
 {
     /// <summary>
     /// Represents information about a type decorated with a <see cref="ByamlObjectAttribute"/>.

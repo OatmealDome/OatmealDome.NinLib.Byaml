@@ -5,9 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using OatmealDome.BinaryData;
-using Syroot.NintenTools.Byaml.IO;
+using OatmealDome.NinLib.Byaml.IO;
 
-namespace Syroot.NintenTools.Byaml.Serialization
+namespace OatmealDome.NinLib.Byaml.Serialization
 {
     /// <summary>
     /// Represents a BYAML parser capable of loading and storing strongly typed data.

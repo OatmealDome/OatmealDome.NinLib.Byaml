@@ -1,7 +1,7 @@
 ﻿using System;
 using Syroot.Maths;
 
-namespace Syroot.NintenTools.Byaml
+namespace OatmealDome.NinLib.Byaml
 {
     /// <summary>
     /// Represents a point in a BYAML path.

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using OatmealDome.BinaryData;
 
-namespace Syroot.NintenTools.Byaml.Serialization
+namespace OatmealDome.NinLib.Byaml.Serialization
 {
     /// <summary>
     /// Represents options to control the serialization process of a <see cref="ByamlSerializer"/>.

@@ -1,7 +1,7 @@
 ﻿using OatmealDome.BinaryData;
 using Syroot.Maths;
 
-namespace Syroot.NintenTools.Byaml.IO
+namespace OatmealDome.NinLib.Byaml.IO
 {   
     /// <summary>
     /// Represents a set of extension methods for the <see cref="BinaryDataWriter"/> class.

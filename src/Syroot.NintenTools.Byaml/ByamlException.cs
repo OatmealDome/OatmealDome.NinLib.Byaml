@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Syroot.NintenTools.Byaml
+namespace OatmealDome.NinLib.Byaml
 {
     /// <summary>
     /// Represents errors that occur when trying to process invalid BYAML data.
