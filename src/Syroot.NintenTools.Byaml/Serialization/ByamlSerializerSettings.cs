@@ -17,7 +17,7 @@ namespace OatmealDome.NinLib.Byaml.Serialization
         public ByamlSerializerSettings()
         {
             ByteOrder = ByteOrder.BigEndian;
-            Version = ByamlVersion.Version1;
+            Version = ByamlVersion.One;
         }
 
         // ---- PROPERTIES ---------------------------------------------------------------------------------------------
@@ -38,16 +38,5 @@ namespace OatmealDome.NinLib.Byaml.Serialization
         /// </summary>
         public ByamlVersion Version { get; set; }
 
-    }
-
-    /// <summary>
-    /// Represents the supported BYAML file versions.
-    /// </summary>
-    public enum ByamlVersion
-    {
-        /// <summary>
-        /// Represents version 1 of the BYAML file format.
-        /// </summary>
-        Version1 = 1
     }
 }
