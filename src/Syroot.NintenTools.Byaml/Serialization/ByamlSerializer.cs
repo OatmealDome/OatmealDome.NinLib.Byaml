@@ -350,7 +350,7 @@ namespace OatmealDome.NinLib.Byaml.Serialization
                 {
                     // If the key could not be mapped to a member, add it to the dictionary for custom deserialization.
                     //Debug.WriteLine($"No member in {type.Name} found to map key \"{key}\" to.");
-                    value = ReadValue(reader, nodeType.GetInstanceType(), nodeType);
+                    value = ReadValue(reader, nodeType.GetInstanceType(Settings.Version), nodeType);
                 }
                 dictionary.Add(key, value);
             }
