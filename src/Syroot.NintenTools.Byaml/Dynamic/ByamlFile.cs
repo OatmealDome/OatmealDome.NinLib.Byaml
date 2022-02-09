@@ -21,8 +21,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
 
         // ---- MEMBERS ------------------------------------------------------------------------------------------------
 
-        private bool _supportPaths;
-        private ByteOrder _byteOrder;
+        private readonly ByamlSerializerSettings _settings;
 
         private List<string> _nameArray;
         private List<string> _stringArray;
@@ -30,10 +29,9 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
 
         // ---- CONSTRUCTORS & DESTRUCTOR ------------------------------------------------------------------------------
 
-        private ByamlFile(bool supportPaths, ByteOrder byteOrder)
+        private ByamlFile(ByamlSerializerSettings settings)
         {
-            _supportPaths = supportPaths;
-            _byteOrder = byteOrder;
+            _settings = settings;
         }
 
         // ---- METHODS (PUBLIC) ---------------------------------------------------------------------------------------
@@ -42,15 +40,13 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
         /// Deserializes and returns the dynamic value of the BYAML node read from the given file.
         /// </summary>
         /// <param name="fileName">The name of the file to read the data from.</param>
-        /// <param name="supportPaths">Whether to expect a path array offset. This must be enabled for Mario Kart 8
-        /// files.</param>
-        /// <param name="byteOrder">The <see cref="ByteOrder"/> to read data in.</param>
-        public static dynamic Load(string fileName, bool supportPaths = false,
-            ByteOrder byteOrder = ByteOrder.BigEndian)
+        /// <param name="settings">The <see cref="ByamlSerializerSettings"/> used to configure how the BYAML will be
+        /// deserialized.</param>
+        public static dynamic Load(string fileName, ByamlSerializerSettings settings)
         {
             using (FileStream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                return Load(stream, supportPaths, byteOrder);
+                return Load(stream, settings);
             }
         }
 
@@ -58,12 +54,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
         /// Deserializes and returns the dynamic value of the BYAML node read from the specified stream.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to read the data from.</param>
-        /// <param name="supportPaths">Whether to expect a path array offset. This must be enabled for Mario Kart 8
-        /// files.</param>
-        /// <param name="byteOrder">The <see cref="ByteOrder"/> to read data in.</param>
-        public static dynamic Load(Stream stream, bool supportPaths = false, ByteOrder byteOrder = ByteOrder.BigEndian)
+        /// <param name="settings">The <see cref="ByamlSerializerSettings"/> used to configure how the BYAML will be
+        /// deserialized.</param>
+        public static dynamic Load(Stream stream, ByamlSerializerSettings settings)
         {
-            ByamlFile byamlFile = new ByamlFile(supportPaths, byteOrder);
+            ByamlFile byamlFile = new ByamlFile(settings);
             return byamlFile.Read(stream);
         }
 
@@ -74,15 +69,13 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
         /// <param name="fileName">The name of the file to store the data in.</param>
         /// <param name="root">The dynamic value becoming the root of the BYAML file. Must be an array or dictionary of
         /// BYAML compatible values.</param>
-        /// <param name="supportPaths">Whether to include a path array. This must be enabled for Mario Kart 8 files.
-        /// </param>
-        /// <param name="byteOrder">The <see cref="ByteOrder"/> to store data in.</param>
-        public static void Save(string fileName, dynamic root, bool supportPaths = false,
-            ByteOrder byteOrder = ByteOrder.BigEndian)
+        /// <param name="settings">The <see cref="ByamlSerializerSettings"/> used to configure how the BYAML will be
+        /// serialized.</param>
+        public static void Save(string fileName, dynamic root, ByamlSerializerSettings settings)
         {
             using (FileStream stream = new FileStream(fileName, FileMode.Create, FileAccess.Write, FileShare.None))
             {
-                Save(stream, root, supportPaths, byteOrder);
+                Save(stream, root, settings);
             }
         }
 
@@ -93,13 +86,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
         /// <param name="stream">The <see cref="Stream"/> to store the data in.</param>
         /// <param name="root">The dynamic value becoming the root of the BYAML file. Must be an array or dictionary of
         /// BYAML compatible values.</param>
-        /// <param name="supportPaths">Whether to include a path array. This must be enabled for Mario Kart 8 files.
-        /// </param>
-        /// <param name="byteOrder">The <see cref="ByteOrder"/> to store data in.</param>
-        public static void Save(Stream stream, dynamic root, bool supportPaths = false,
-            ByteOrder byteOrder = ByteOrder.BigEndian)
+        /// <param name="settings">The <see cref="ByamlSerializerSettings"/> used to configure how the BYAML will be
+        /// serialized.</param>
+        public static void Save(Stream stream, dynamic root, ByamlSerializerSettings settings)
         {
-            ByamlFile byamlFile = new ByamlFile(supportPaths, byteOrder);
+            ByamlFile byamlFile = new ByamlFile(settings);
             byamlFile.Write(stream, root);
         }
 
@@ -157,7 +148,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             // Open a reader on the given stream.
             using (BinaryDataReader reader = new BinaryDataReader(stream, Encoding.UTF8, true))
             {
-                reader.ByteOrder = _byteOrder;
+                reader.ByteOrder = _settings.ByteOrder;
 
                 // Load the header, specifying magic bytes ("BY"), version and main node offsets.
                 if (reader.ReadUInt16() != _magicBytes) throw new ByamlException("Invalid BYAML header.");
@@ -165,7 +156,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 uint nameArrayOffset = reader.ReadUInt32();
                 uint stringArrayOffset = reader.ReadUInt32();
                 uint pathArrayOffset = 0;
-                if (_supportPaths)
+                if (_settings.SupportPaths)
                 {
                     pathArrayOffset = reader.ReadUInt32();
                 }
@@ -183,7 +174,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 }
                 
                 // Read the optional path array, holding paths referenced by index in path nodes.
-                if (_supportPaths && pathArrayOffset != 0)
+                if (_settings.SupportPaths && pathArrayOffset != 0)
                 {
                     // The third offset is the root node, so just read that and we're done.
                     reader.Seek(pathArrayOffset, SeekOrigin.Begin);
@@ -388,14 +379,14 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             // Open a writer on the given stream.
             using (BinaryDataWriter writer = new BinaryDataWriter(stream, Encoding.UTF8, true))
             {
-                writer.ByteOrder = _byteOrder;
+                writer.ByteOrder = _settings.ByteOrder;
 
                 // Write the header, specifying magic bytes, version and main node offsets.
                 writer.Write(_magicBytes);
                 writer.Write((short)0x0001);
                 Offset nameArrayOffset = writer.ReserveOffset();
                 Offset stringArrayOffset = writer.ReserveOffset();
-                Offset pathArrayOffset = _supportPaths ? writer.ReserveOffset() : null;
+                Offset pathArrayOffset = _settings.SupportPaths ? writer.ReserveOffset() : null;
                 Offset rootOffset = writer.ReserveOffset();
 
                 // Write the main nodes.
@@ -410,7 +401,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 }
 
                 // Include a path array offset if requested.
-                if (_supportPaths)
+                if (_settings.SupportPaths)
                 {
                     if (_pathArray.Count == 0)
                     {
@@ -519,7 +510,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
         private void WriteTypeAndLength(BinaryDataWriter writer, ByamlNodeType type, dynamic node)
         {
             uint value;
-            if (_byteOrder == ByteOrder.BigEndian)
+            if (_settings.ByteOrder == ByteOrder.BigEndian)
             {
                 value = (uint)type << 24 | (uint)Enumerable.Count(node);
             }
@@ -585,7 +576,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             {
                 // Get the index of the key string in the file's name array and write it together with the type.
                 uint keyIndex = (uint)_nameArray.IndexOf(keyValuePair.Key);
-                if (_byteOrder == ByteOrder.BigEndian)
+                if (_settings.ByteOrder == ByteOrder.BigEndian)
                 {
                     writer.Write(keyIndex << 8 | (uint)GetNodeType(keyValuePair.Value));
                 }
@@ -693,7 +684,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
 
         private uint Get1MsbByte(uint value)
         {
-            if (_byteOrder == ByteOrder.BigEndian)
+            if (_settings.ByteOrder == ByteOrder.BigEndian)
             {
                 return value & 0x000000FF;
             }
@@ -705,7 +696,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
 
         private uint Get3LsbBytes(uint value)
         {
-            if (_byteOrder == ByteOrder.BigEndian)
+            if (_settings.ByteOrder == ByteOrder.BigEndian)
             {
                 return value & 0x00FFFFFF;
             }
@@ -717,7 +708,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
 
         private uint Get3MsbBytes(uint value)
         {
-            if (_byteOrder == ByteOrder.BigEndian)
+            if (_settings.ByteOrder == ByteOrder.BigEndian)
             {
                 return value >> 8;
             }
