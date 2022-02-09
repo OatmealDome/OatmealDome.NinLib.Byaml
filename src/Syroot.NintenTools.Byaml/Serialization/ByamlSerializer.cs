@@ -23,7 +23,8 @@ namespace OatmealDome.NinLib.Byaml.Serialization
         private Dictionary<Type, ByamlObjectInfo> _byamlObjectInfos;
         private Dictionary<object, Dictionary<string, object>> _customMembers;
         private object _instance;
-
+        
+        private ByamlVersion _currentReadVersion;
         private List<string> _nameArray;
         private List<string> _stringArray;
         private List<List<ByamlPathPoint>> _pathArray;
@@ -172,8 +173,16 @@ namespace OatmealDome.NinLib.Byaml.Serialization
             {
                 throw new ByamlException("Invalid BYAML header.");
             }
+            
             ushort version = reader.ReadUInt16();
-            if (version != (ushort)Settings.Version)
+            if (version > (ushort)ByamlVersion.Four)
+            {
+                throw new ByamlException($"Unsupported BYAML version '{version}'.");
+            }
+            
+            _currentReadVersion = (ByamlVersion)version;
+            
+            if (Settings.Version.HasValue && _currentReadVersion != Settings.Version)
             {
                 throw new ByamlException($"Unexpected BYAML version '{version}'.");
             }
@@ -350,7 +359,7 @@ namespace OatmealDome.NinLib.Byaml.Serialization
                 {
                     // If the key could not be mapped to a member, add it to the dictionary for custom deserialization.
                     //Debug.WriteLine($"No member in {type.Name} found to map key \"{key}\" to.");
-                    value = ReadValue(reader, nodeType.GetInstanceType(Settings.Version), nodeType);
+                    value = ReadValue(reader, nodeType.GetInstanceType(_currentReadVersion), nodeType);
                 }
                 dictionary.Add(key, value);
             }
@@ -521,6 +530,12 @@ namespace OatmealDome.NinLib.Byaml.Serialization
 
         private void Write(BinaryDataWriter writer, object obj)
         {
+            if (!Settings.Version.HasValue)
+            {
+                throw new ByamlException(
+                    "Version must be specified in ByamlSerializerSettings when serializing a BYAML.");
+            }
+            
             // Write the header, specifying magic bytes, version and main node offsets.
             writer.Write(_magicBytes);
             writer.Write((short)Settings.Version);
