@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using OatmealDome.BinaryData;
-using OatmealDome.NinLib.Byaml.IO;
 
 namespace OatmealDome.NinLib.Byaml.Dynamic
 {
@@ -25,7 +24,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
 
         private List<string> _nameArray;
         private List<string> _stringArray;
-        private List<List<ByamlPathPoint>> _pathArray;
+        private List<byte[]> _binaryDataArray;
 
         // ---- CONSTRUCTORS & DESTRUCTOR ------------------------------------------------------------------------------
 
@@ -192,7 +191,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 {
                     // The third offset is the root node, so just read that and we're done.
                     reader.Seek(pathArrayOffset, SeekOrigin.Begin);
-                    _pathArray = ReadNode(reader);
+                    _binaryDataArray = ReadNode(reader);
                 }
 
                 
@@ -210,7 +209,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             {
                 nodeType = (ByamlNodeType)reader.ReadByte();
             }
-            if (nodeType >= ByamlNodeType.Array && nodeType <= ByamlNodeType.PathArray)
+            if (nodeType >= ByamlNodeType.Array && nodeType <= ByamlNodeType.BinaryDataArray)
             {
                 // Get the length of arrays.
                 long? oldPos = null;
@@ -238,7 +237,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     case ByamlNodeType.StringArray:
                         value = ReadStringArrayNode(reader, length);
                         break;
-                    case ByamlNodeType.PathArray:
+                    case ByamlNodeType.BinaryDataArray:
                         value = ReadPathArrayNode(reader, length);
                         break;
                     default:
@@ -258,8 +257,8 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 {
                     case ByamlNodeType.StringIndex:
                         return _stringArray[reader.ReadInt32()];
-                    case ByamlNodeType.PathIndex:
-                        return _pathArray[reader.ReadInt32()];
+                    case ByamlNodeType.BinaryData:
+                        return _binaryDataArray[reader.ReadInt32()];
                     case ByamlNodeType.Boolean:
                         return reader.ReadInt32() != 0;
                     case ByamlNodeType.Integer:
@@ -328,9 +327,9 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             return stringArray;
         }
 
-        private List<List<ByamlPathPoint>> ReadPathArrayNode(BinaryDataReader reader, int length)
+        private List<byte[]> ReadPathArrayNode(BinaryDataReader reader, int length)
         {
-            List<List<ByamlPathPoint>> pathArray = new List<List<ByamlPathPoint>>(length);
+            List<byte[]> dataArray = new List<byte[]>(length);
 
             // Read the element offsets.
             long nodeOffset = reader.Position - 4; // Path offsets are relative to the start of node.
@@ -341,31 +340,12 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             for (int i = 0; i < length; i++)
             {
                 reader.Seek(nodeOffset + offsets[i], SeekOrigin.Begin);
-                int pointCount = (int)((offsets[i + 1] - offsets[i]) / 0x1C);
-                pathArray.Add(ReadPath(reader, pointCount));
+                int size = (int)(offsets[i + 1] - offsets[i]);
+                dataArray.Add(reader.ReadBytes(size));
             }
             reader.Seek(oldPosition, SeekOrigin.Begin);
 
-            return pathArray;
-        }
-
-        private List<ByamlPathPoint> ReadPath(BinaryDataReader reader, int length)
-        {
-            List<ByamlPathPoint> byamlPath = new List<ByamlPathPoint>();
-            for (int j = 0; j < length; j++)
-            {
-                byamlPath.Add(ReadPathPoint(reader));
-            }
-            return byamlPath;
-        }
-
-        private ByamlPathPoint ReadPathPoint(BinaryDataReader reader)
-        {
-            ByamlPathPoint point = new ByamlPathPoint();
-            point.Position = reader.ReadVector3F();
-            point.Normal = reader.ReadVector3F();
-            point.Unknown = reader.ReadUInt32();
-            return point;
+            return dataArray;
         }
 
         // ---- Saving ----
@@ -392,7 +372,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             // Generate the name, string and path array nodes.
             _nameArray = new List<string>();
             _stringArray = new List<string>();
-            _pathArray = new List<List<ByamlPathPoint>>();
+            _binaryDataArray = new List<byte[]>();
             CollectNodeArrayContents(root);
             _nameArray.Sort(StringComparer.Ordinal);
             _stringArray.Sort(StringComparer.Ordinal);
@@ -424,13 +404,13 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 // Include a path array offset if requested.
                 if (_settings.SupportPaths)
                 {
-                    if (_pathArray.Count == 0)
+                    if (_binaryDataArray.Count == 0)
                     {
                         writer.Write(0);
                     }
                     else
                     {
-                        WriteValueContents(writer, pathArrayOffset, ByamlNodeType.PathArray, _pathArray);
+                        WriteValueContents(writer, pathArrayOffset, ByamlNodeType.BinaryDataArray, _binaryDataArray);
                     }
                 }
 
@@ -448,9 +428,9 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     _stringArray.Add((string)node);
                 }
             }
-            else if (node is List<ByamlPathPoint>)
+            else if (node is byte[])
             {
-                _pathArray.Add((List<ByamlPathPoint>)node);
+                _binaryDataArray.Add((byte[])node);
             }
             else if (node is IDictionary<string, dynamic>)
             {
@@ -481,8 +461,8 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 case ByamlNodeType.StringIndex:
                     WriteStringIndexNode(writer, value);
                     return null;
-                case ByamlNodeType.PathIndex:
-                    WritePathIndexNode(writer, value);
+                case ByamlNodeType.BinaryData:
+                    WriteBinaryDataIndexNode(writer, value);
                     return null;
                 case ByamlNodeType.Dictionary:
                 case ByamlNodeType.Array:
@@ -517,7 +497,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 case ByamlNodeType.StringArray:
                     WriteStringArrayNode(writer, value);
                     break;
-                case ByamlNodeType.PathArray:
+                case ByamlNodeType.BinaryDataArray:
                     WritePathArrayNode(writer, value);
                     break;
                 case ByamlNodeType.Array:
@@ -547,9 +527,9 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             writer.Write(_stringArray.IndexOf(node));
         }
 
-        private void WritePathIndexNode(BinaryDataWriter writer, List<ByamlPathPoint> node)
+        private void WriteBinaryDataIndexNode(BinaryDataWriter writer, byte[] node)
         {
-            writer.Write(_pathArray.IndexOf(node));
+            writer.Write(_binaryDataArray.IndexOf(node));
         }
 
         private void WriteArrayNode(BinaryDataWriter writer, IEnumerable node)
@@ -643,40 +623,25 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             }
         }
 
-        private void WritePathArrayNode(BinaryDataWriter writer, IEnumerable<List<ByamlPathPoint>> node)
+        private void WritePathArrayNode(BinaryDataWriter writer, IEnumerable<byte[]> node)
         {
             writer.Align(4);
-            WriteTypeAndLength(writer, ByamlNodeType.PathArray, node);
+            WriteTypeAndLength(writer, ByamlNodeType.BinaryDataArray, node);
 
             // Write the offsets to the paths, where the last one points to the end of the last path.
             long offset = 4 + 4 * (node.Count() + 1); // Relative to node start + all uint32 offsets.
-            foreach (List<ByamlPathPoint> path in node)
+            foreach (byte[] data in node)
             {
                 writer.Write((uint)offset);
-                offset += path.Count * 28; // 28 bytes are required for a single point.
+                offset += data.Length;
             }
             writer.Write((uint)offset);
 
             // Write the paths.
-            foreach (List<ByamlPathPoint> path in node)
+            foreach (byte[] data in node)
             {
-                WritePathNode(writer, path);
+                writer.Write(data);
             }
-        }
-
-        private void WritePathNode(BinaryDataWriter writer, List<ByamlPathPoint> node)
-        {
-            foreach (ByamlPathPoint point in node)
-            {
-                WritePathPoint(writer, point);
-            }
-        }
-
-        private void WritePathPoint(BinaryDataWriter writer, ByamlPathPoint point)
-        {
-            writer.Write(point.Position);
-            writer.Write(point.Normal);
-            writer.Write(point.Unknown);
         }
 
         // ---- Helper methods ----
@@ -686,13 +651,13 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             if (isInternalNode)
             {
                 if (node is IEnumerable<string>) return ByamlNodeType.StringArray;
-                else if (node is IEnumerable<List<ByamlPathPoint>>) return ByamlNodeType.PathArray;
+                else if (node is IEnumerable<byte[]>) return ByamlNodeType.BinaryDataArray;
                 else throw new ByamlException($"Type '{node.GetType()}' is not supported as a main BYAML node.");
             }
             else
             {
                 if (node is string) return ByamlNodeType.StringIndex;
-                else if (node is List<ByamlPathPoint>) return ByamlNodeType.PathIndex;
+                else if (node is byte[]) return ByamlNodeType.BinaryData;
                 else if (node is IDictionary<string, dynamic>) return ByamlNodeType.Dictionary;
                 else if (node is IEnumerable) return ByamlNodeType.Array;
                 else if (node is bool) return ByamlNodeType.Boolean;

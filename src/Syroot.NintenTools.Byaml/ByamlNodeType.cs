@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace OatmealDome.NinLib.Byaml
@@ -14,16 +14,10 @@ namespace OatmealDome.NinLib.Byaml
         StringIndex = 0xA0,
 
         /// <summary>
-        /// The node represents a list of <see cref="ByamlPathPoint"/> instances (internally referenced by index).
-        /// Only present in Mario Kart 8's BYAML files.
+        /// The node represents an array of <see cref="byte">s.
+        /// Only present in Mario Kart 8's BYAML files and BYAML versions 4 and newer.
         /// </summary>
-        PathIndex = 0xA1,
-        
-        /// <summary>
-        /// The node represents binary data.
-        /// Reuses the same node type as <see cref="PathIndex"/>, but only present in BYAML version 4.
-        /// </summary>
-        BinaryData = PathIndex,
+        BinaryData = 0xA1,
 
         /// <summary>
         /// The node represents an array of dynamic child instances.
@@ -41,10 +35,10 @@ namespace OatmealDome.NinLib.Byaml
         StringArray = 0xC2,
 
         /// <summary>
-        /// The node represents an array of lists of <see cref="ByamlPathPoint"/> instances.
+        /// The node represents an array of binary data.
         /// Only present in Mario Kart 8's BYAML files.
         /// </summary>
-        PathArray = 0xC3,
+        BinaryDataArray = 0xC3,
 
         /// <summary>
         /// The node represents a <see cref="bool"/>.
