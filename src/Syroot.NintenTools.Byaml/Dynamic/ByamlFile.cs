@@ -165,6 +165,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 {
                     throw new ByamlException($"Unexpected BYAML version '{version}'.");
                 }
+
+                if (version != (ushort)ByamlVersion.One && _settings.SupportsBinaryData)
+                {
+                    throw new ByamlException("SupportsBinaryData is only used with BYAML version 1.");
+                }
                 
                 uint nameArrayOffset = reader.ReadUInt32();
                 uint stringArrayOffset = reader.ReadUInt32();
@@ -367,6 +372,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             {
                 throw new ByamlException(
                     "Version must be specified in ByamlSerializerSettings when serializing a BYAML.");
+            }
+
+            if (_settings.Version != ByamlVersion.One && _settings.SupportsBinaryData)
+            {
+                throw new ByamlException("SupportsBinaryData is only used with BYAML version 1.");
             }
 
             // Generate the name, string and data array nodes.
