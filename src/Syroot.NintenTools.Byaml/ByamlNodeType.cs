@@ -48,7 +48,7 @@ namespace OatmealDome.NinLib.Byaml
         /// <summary>
         /// The node represents an <see cref="int"/>.
         /// </summary>
-        Integer = 0xD1,
+        Int32 = 0xD1,
 
         /// <summary>
         /// The node represents a <see cref="float"/>.

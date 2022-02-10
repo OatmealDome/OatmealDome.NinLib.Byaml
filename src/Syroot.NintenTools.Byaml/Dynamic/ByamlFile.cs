@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -261,7 +261,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                         return _binaryDataArray[reader.ReadInt32()];
                     case ByamlNodeType.Boolean:
                         return reader.ReadInt32() != 0;
-                    case ByamlNodeType.Integer:
+                    case ByamlNodeType.Int32:
                         return reader.ReadInt32();
                     case ByamlNodeType.Float:
                         return reader.ReadSingle();
@@ -470,7 +470,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 case ByamlNodeType.Boolean:
                     writer.Write(value ? 1 : 0);
                     return null;
-                case ByamlNodeType.Integer:
+                case ByamlNodeType.Int32:
                 case ByamlNodeType.Float:
                     writer.Write(value);
                     return null;
@@ -661,7 +661,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 else if (node is IDictionary<string, dynamic>) return ByamlNodeType.Dictionary;
                 else if (node is IEnumerable) return ByamlNodeType.Array;
                 else if (node is bool) return ByamlNodeType.Boolean;
-                else if (node is int) return ByamlNodeType.Integer;
+                else if (node is int) return ByamlNodeType.Int32;
                 else if (node is float) return ByamlNodeType.Float;
                 else if (node == null) return ByamlNodeType.Null;
                 else throw new ByamlException($"Type '{node.GetType()}' is not supported as a BYAML node.");
