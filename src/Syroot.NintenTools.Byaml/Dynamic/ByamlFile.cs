@@ -169,7 +169,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 uint nameArrayOffset = reader.ReadUInt32();
                 uint stringArrayOffset = reader.ReadUInt32();
                 uint pathArrayOffset = 0;
-                if (_settings.SupportPaths)
+                if (_settings.SupportsBinaryData)
                 {
                     pathArrayOffset = reader.ReadUInt32();
                 }
@@ -187,7 +187,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 }
                 
                 // Read the optional path array, holding paths referenced by index in path nodes.
-                if (_settings.SupportPaths && pathArrayOffset != 0)
+                if (_settings.SupportsBinaryData && pathArrayOffset != 0)
                 {
                     // The third offset is the root node, so just read that and we're done.
                     reader.Seek(pathArrayOffset, SeekOrigin.Begin);
@@ -387,7 +387,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 writer.Write((ushort)_settings.Version);
                 Offset nameArrayOffset = writer.ReserveOffset();
                 Offset stringArrayOffset = writer.ReserveOffset();
-                Offset pathArrayOffset = _settings.SupportPaths ? writer.ReserveOffset() : null;
+                Offset pathArrayOffset = _settings.SupportsBinaryData ? writer.ReserveOffset() : null;
                 Offset rootOffset = writer.ReserveOffset();
 
                 // Write the main nodes.
@@ -402,7 +402,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 }
 
                 // Include a path array offset if requested.
-                if (_settings.SupportPaths)
+                if (_settings.SupportsBinaryData)
                 {
                     if (_binaryDataArray.Count == 0)
                     {

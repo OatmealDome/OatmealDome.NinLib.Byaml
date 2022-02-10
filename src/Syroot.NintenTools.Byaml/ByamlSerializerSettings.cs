@@ -28,10 +28,9 @@ namespace OatmealDome.NinLib.Byaml
         public ByteOrder ByteOrder { get; set; }
 
         /// <summary>
-        /// Gets or sets a value indicating whether <see cref="IEnumerable{ByamlPathPoint}"/> instances will be
-        /// supported and expected in the BYAML file.
+        /// Gets or sets a value indicating whether binary data will be supported and expected in a version 1 BYAML.
         /// </summary>
-        public bool SupportPaths { get; set; }
+        public bool SupportsBinaryData { get; set; }
 
         /// <summary>
         /// Gets or sets the version of the BYAML file to write or expect.
