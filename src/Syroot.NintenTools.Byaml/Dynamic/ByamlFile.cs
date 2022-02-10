@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -275,11 +275,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     case ByamlNodeType.Float:
                         return reader.ReadSingle();
                     case ByamlNodeType.UInt32:
-                        if (_currentReadVersion == ByamlVersion.One)
-                        {
-                            throw new ByamlException("Unexpected node type UInt32 for current BYAML version.");
-                        }
-                        
+                        EnforceMinimumVersion(nodeType, ByamlVersion.Two);
                         return reader.ReadUInt32();
                     case ByamlNodeType.Null:
                         reader.Seek(0x4);
@@ -496,10 +492,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     writer.Write(value);
                     return null;
                 case ByamlNodeType.UInt32:
-                    if (_settings.Version == ByamlVersion.One)
-                    {
-                        throw new ByamlException("UInt32 is not supported with BYAML version 1.");
-                    }
+                    EnforceMinimumVersion(type, ByamlVersion.Two);
 
                     writer.Write(value);
                     return null;
@@ -694,6 +687,14 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 else if (node is float) return ByamlNodeType.Float;
                 else if (node == null) return ByamlNodeType.Null;
                 else throw new ByamlException($"Type '{node.GetType()}' is not supported as a BYAML node.");
+            }
+        }
+        
+        private void EnforceMinimumVersion(ByamlNodeType nodeType, ByamlVersion minimumVersion)
+        {
+            if ((ushort)minimumVersion > (ushort)_currentReadVersion)
+            {
+                throw new ByamlException($"Unexpected node type '{nodeType}' for current BYAML version."); 
             }
         }
 
