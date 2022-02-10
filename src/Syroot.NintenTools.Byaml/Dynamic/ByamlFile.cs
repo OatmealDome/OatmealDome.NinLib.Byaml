@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -168,10 +168,10 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 
                 uint nameArrayOffset = reader.ReadUInt32();
                 uint stringArrayOffset = reader.ReadUInt32();
-                uint pathArrayOffset = 0;
+                uint dataArrayOffset = 0;
                 if (_settings.SupportsBinaryData)
                 {
-                    pathArrayOffset = reader.ReadUInt32();
+                    dataArrayOffset = reader.ReadUInt32();
                 }
                 uint rootNodeOffset = reader.ReadUInt32();
 
@@ -186,11 +186,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     _stringArray = ReadNode(reader);
                 }
                 
-                // Read the optional path array, holding paths referenced by index in path nodes.
-                if (_settings.SupportsBinaryData && pathArrayOffset != 0)
+                // Read the optional binary data array, holding data referenced by index in binary data nodes.
+                if (_settings.SupportsBinaryData && dataArrayOffset != 0)
                 {
                     // The third offset is the root node, so just read that and we're done.
-                    reader.Seek(pathArrayOffset, SeekOrigin.Begin);
+                    reader.Seek(dataArrayOffset, SeekOrigin.Begin);
                     _binaryDataArray = ReadNode(reader);
                 }
 
@@ -332,10 +332,10 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             List<byte[]> dataArray = new List<byte[]>(length);
 
             // Read the element offsets.
-            long nodeOffset = reader.Position - 4; // Path offsets are relative to the start of node.
+            long nodeOffset = reader.Position - 4; // Binary data offsets are relative to the start of node.
             uint[] offsets = reader.ReadUInt32s(length + 1);
 
-            // Read the paths by seeking to their element offset and then back.
+            // Read the data by seeking to their element offset and then back.
             long oldPosition = reader.Position;
             for (int i = 0; i < length; i++)
             {
@@ -369,7 +369,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     "Version must be specified in ByamlSerializerSettings when serializing a BYAML.");
             }
 
-            // Generate the name, string and path array nodes.
+            // Generate the name, string and data array nodes.
             _nameArray = new List<string>();
             _stringArray = new List<string>();
             _binaryDataArray = new List<byte[]>();
@@ -387,7 +387,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 writer.Write((ushort)_settings.Version);
                 Offset nameArrayOffset = writer.ReserveOffset();
                 Offset stringArrayOffset = writer.ReserveOffset();
-                Offset pathArrayOffset = _settings.SupportsBinaryData ? writer.ReserveOffset() : null;
+                Offset dataArrayOffset = _settings.SupportsBinaryData ? writer.ReserveOffset() : null;
                 Offset rootOffset = writer.ReserveOffset();
 
                 // Write the main nodes.
@@ -401,7 +401,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     WriteValueContents(writer, stringArrayOffset, ByamlNodeType.StringArray, _stringArray);
                 }
 
-                // Include a path array offset if requested.
+                // Include a data array offset if requested.
                 if (_settings.SupportsBinaryData)
                 {
                     if (_binaryDataArray.Count == 0)
@@ -410,7 +410,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     }
                     else
                     {
-                        WriteValueContents(writer, pathArrayOffset, ByamlNodeType.BinaryDataArray, _binaryDataArray);
+                        WriteValueContents(writer, dataArrayOffset, ByamlNodeType.BinaryDataArray, _binaryDataArray);
                     }
                 }
 
@@ -628,7 +628,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             writer.Align(4);
             WriteTypeAndLength(writer, ByamlNodeType.BinaryDataArray, node);
 
-            // Write the offsets to the paths, where the last one points to the end of the last path.
+            // Write the offsets to the data, where the last one points to the end of the last data.
             long offset = 4 + 4 * (node.Count() + 1); // Relative to node start + all uint32 offsets.
             foreach (byte[] data in node)
             {
@@ -637,7 +637,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             }
             writer.Write((uint)offset);
 
-            // Write the paths.
+            // Write the data.
             foreach (byte[] data in node)
             {
                 writer.Write(data);
