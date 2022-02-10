@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -21,6 +21,8 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
         // ---- MEMBERS ------------------------------------------------------------------------------------------------
 
         private readonly ByamlSerializerSettings _settings;
+
+        private ByamlVersion _currentReadVersion;
 
         private List<string> _nameArray;
         private List<string> _stringArray;
@@ -170,6 +172,8 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 {
                     throw new ByamlException("SupportsBinaryData is only used with BYAML version 1.");
                 }
+
+                _currentReadVersion = (ByamlVersion)version;
                 
                 uint nameArrayOffset = reader.ReadUInt32();
                 uint stringArrayOffset = reader.ReadUInt32();
