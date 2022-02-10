@@ -275,16 +275,16 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     case ByamlNodeType.Float:
                         return reader.ReadSingle();
                     case ByamlNodeType.UInt32:
-                        EnforceMinimumVersion(nodeType, ByamlVersion.Two);
+                        EnforceMinimumVersionRead(nodeType, ByamlVersion.Two);
                         return reader.ReadUInt32();
                     case ByamlNodeType.Int64:
-                        EnforceMinimumVersion(nodeType, ByamlVersion.Three);
+                        EnforceMinimumVersionRead(nodeType, ByamlVersion.Three);
                         return ReadComplexValueNode(reader, r => r.ReadInt64());
                     case ByamlNodeType.UInt64:
-                        EnforceMinimumVersion(nodeType, ByamlVersion.Three);
+                        EnforceMinimumVersionRead(nodeType, ByamlVersion.Three);
                         return ReadComplexValueNode(reader, r => r.ReadUInt64());
                     case ByamlNodeType.Double:
-                        EnforceMinimumVersion(nodeType, ByamlVersion.Three);
+                        EnforceMinimumVersionRead(nodeType, ByamlVersion.Three);
                         return ReadComplexValueNode(reader, r => r.ReadDouble());
                     case ByamlNodeType.Null:
                         reader.Seek(0x4);
@@ -376,6 +376,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             {
                 return readFunc(reader);
             }
+        }
+        
+        private void EnforceMinimumVersionRead(ByamlNodeType nodeType, ByamlVersion minimumVersion)
+        {
+            EnforceMinimumVersion(nodeType, _currentReadVersion, minimumVersion);
         }
 
         // ---- Saving ----
@@ -510,14 +515,14 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     writer.Write(value);
                     return null;
                 case ByamlNodeType.UInt32:
-                    EnforceMinimumVersion(type, ByamlVersion.Two);
+                    EnforceMinimumVersionWrite(type, ByamlVersion.Two);
 
                     writer.Write(value);
                     return null;
                 case ByamlNodeType.Int64:
                 case ByamlNodeType.UInt64:
                 case ByamlNodeType.Double:
-                    EnforceMinimumVersion(type, ByamlVersion.Three);
+                    EnforceMinimumVersionWrite(type, ByamlVersion.Three);
                     return writer.ReserveOffset();
                 case ByamlNodeType.Null:
                     writer.Write(0x0);
@@ -693,6 +698,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 writer.Write(data);
             }
         }
+        
+        private void EnforceMinimumVersionWrite(ByamlNodeType nodeType, ByamlVersion minimumVersion)
+        {
+            EnforceMinimumVersion(nodeType, _settings.Version.Value, minimumVersion);
+        }
 
         // ---- Helper methods ----
 
@@ -717,10 +727,10 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 else throw new ByamlException($"Type '{node.GetType()}' is not supported as a BYAML node.");
             }
         }
-        
-        private void EnforceMinimumVersion(ByamlNodeType nodeType, ByamlVersion minimumVersion)
+
+        private void EnforceMinimumVersion(ByamlNodeType nodeType, ByamlVersion currentVersion, ByamlVersion minimumVersion)
         {
-            if ((ushort)minimumVersion > (ushort)_currentReadVersion)
+            if ((ushort)minimumVersion > (ushort)currentVersion)
             {
                 throw new ByamlException($"Unexpected node type '{nodeType}' for current BYAML version."); 
             }
