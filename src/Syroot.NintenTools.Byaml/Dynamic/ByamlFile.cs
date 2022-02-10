@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -274,6 +274,13 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                         return reader.ReadInt32();
                     case ByamlNodeType.Float:
                         return reader.ReadSingle();
+                    case ByamlNodeType.UInt32:
+                        if (_currentReadVersion == ByamlVersion.One)
+                        {
+                            throw new ByamlException("Unexpected node type UInt32 for current BYAML version.");
+                        }
+                        
+                        return reader.ReadUInt32();
                     case ByamlNodeType.Null:
                         reader.Seek(0x4);
                         return null;
@@ -486,6 +493,14 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     return null;
                 case ByamlNodeType.Int32:
                 case ByamlNodeType.Float:
+                    writer.Write(value);
+                    return null;
+                case ByamlNodeType.UInt32:
+                    if (_settings.Version == ByamlVersion.One)
+                    {
+                        throw new ByamlException("UInt32 is not supported with BYAML version 1.");
+                    }
+
                     writer.Write(value);
                     return null;
                 case ByamlNodeType.Null:
