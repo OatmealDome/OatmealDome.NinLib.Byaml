@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -277,6 +277,15 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     case ByamlNodeType.UInt32:
                         EnforceMinimumVersion(nodeType, ByamlVersion.Two);
                         return reader.ReadUInt32();
+                    case ByamlNodeType.Int64:
+                        EnforceMinimumVersion(nodeType, ByamlVersion.Three);
+                        return ReadComplexValueNode(reader, r => r.ReadInt64());
+                    case ByamlNodeType.UInt64:
+                        EnforceMinimumVersion(nodeType, ByamlVersion.Three);
+                        return ReadComplexValueNode(reader, r => r.ReadUInt64());
+                    case ByamlNodeType.Double:
+                        EnforceMinimumVersion(nodeType, ByamlVersion.Three);
+                        return ReadComplexValueNode(reader, r => r.ReadDouble());
                     case ByamlNodeType.Null:
                         reader.Seek(0x4);
                         return null;
@@ -358,6 +367,15 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             reader.Seek(oldPosition, SeekOrigin.Begin);
 
             return dataArray;
+        }
+
+        private dynamic ReadComplexValueNode(BinaryDataReader reader, Func<BinaryDataReader, dynamic> readFunc)
+        {
+            long offset = reader.ReadUInt32();
+            using (reader.TemporarySeek(offset, SeekOrigin.Begin))
+            {
+                return readFunc(reader);
+            }
         }
 
         // ---- Saving ----
@@ -496,6 +514,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
 
                     writer.Write(value);
                     return null;
+                case ByamlNodeType.Int64:
+                case ByamlNodeType.UInt64:
+                case ByamlNodeType.Double:
+                    EnforceMinimumVersion(type, ByamlVersion.Three);
+                    return writer.ReserveOffset();
                 case ByamlNodeType.Null:
                     writer.Write(0x0);
                     return null;
@@ -524,6 +547,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     break;
                 case ByamlNodeType.Array:
                     WriteArrayNode(writer, value);
+                    break;
+                case ByamlNodeType.Int64:
+                case ByamlNodeType.UInt64:
+                case ByamlNodeType.Double:
+                    writer.Write(value);
                     break;
                 default:
                     throw new ByamlException($"{type} not supported as complex node.");
