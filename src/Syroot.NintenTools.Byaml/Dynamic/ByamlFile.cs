@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -498,7 +498,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     WriteStringArrayNode(writer, value);
                     break;
                 case ByamlNodeType.BinaryDataArray:
-                    WritePathArrayNode(writer, value);
+                    WriteBinaryDataArrayNode(writer, value);
                     break;
                 case ByamlNodeType.Array:
                     WriteArrayNode(writer, value);
@@ -623,7 +623,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             }
         }
 
-        private void WritePathArrayNode(BinaryDataWriter writer, IEnumerable<byte[]> node)
+        private void WriteBinaryDataArrayNode(BinaryDataWriter writer, IEnumerable<byte[]> node)
         {
             writer.Align(4);
             WriteTypeAndLength(writer, ByamlNodeType.BinaryDataArray, node);
