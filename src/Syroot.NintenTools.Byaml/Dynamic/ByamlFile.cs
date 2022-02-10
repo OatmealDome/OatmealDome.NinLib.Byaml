@@ -267,7 +267,15 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     case ByamlNodeType.StringIndex:
                         return _stringArray[reader.ReadInt32()];
                     case ByamlNodeType.BinaryData:
-                        return _binaryDataArray[reader.ReadInt32()];
+                        if (_currentReadVersion == ByamlVersion.One && _settings.SupportsBinaryData)
+                        {
+                            return _binaryDataArray[reader.ReadInt32()];
+                        }
+                        
+                        EnforceMinimumVersionRead(nodeType, ByamlVersion.Four);
+                        
+                        int length = reader.ReadInt32();
+                        return ReadComplexValueNode(reader, r => r.ReadBytes(length));
                     case ByamlNodeType.Boolean:
                         return reader.ReadInt32() != 0;
                     case ByamlNodeType.Int32:
@@ -502,8 +510,16 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     WriteStringIndexNode(writer, value);
                     return null;
                 case ByamlNodeType.BinaryData:
-                    WriteBinaryDataIndexNode(writer, value);
-                    return null;
+                    if (_settings.Version == ByamlVersion.One && _settings.SupportsBinaryData)
+                    {
+                        WriteBinaryDataIndexNode(writer, value);
+                        return null;
+                    }
+                    
+                    EnforceMinimumVersionWrite(type, ByamlVersion.Four);
+                    
+                    writer.Write((int)value.Length);
+                    return writer.ReserveOffset();
                 case ByamlNodeType.Dictionary:
                 case ByamlNodeType.Array:
                     return writer.ReserveOffset();
@@ -541,6 +557,9 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             // Write the value contents.
             switch (type)
             {
+                case ByamlNodeType.BinaryData:
+                    writer.Write(value);
+                    break;
                 case ByamlNodeType.Dictionary:
                     WriteDictionaryNode(writer, value);
                     break;
