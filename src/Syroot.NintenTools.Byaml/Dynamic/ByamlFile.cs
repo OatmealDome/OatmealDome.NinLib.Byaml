@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -238,7 +238,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                         value = ReadStringArrayNode(reader, length);
                         break;
                     case ByamlNodeType.BinaryDataArray:
-                        value = ReadPathArrayNode(reader, length);
+                        value = ReadBinaryDataArrayNode(reader, length);
                         break;
                     default:
                         throw new ByamlException($"Unknown node type '{nodeType}'.");
@@ -327,7 +327,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             return stringArray;
         }
 
-        private List<byte[]> ReadPathArrayNode(BinaryDataReader reader, int length)
+        private List<byte[]> ReadBinaryDataArrayNode(BinaryDataReader reader, int length)
         {
             List<byte[]> dataArray = new List<byte[]>(length);
 
