@@ -17,12 +17,14 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
         // ---- CONSTANTS ----------------------------------------------------------------------------------------------
 
         private const ushort _magicBytes = 0x4259; // "BY"
+        private const ushort _magicBytesLittle = 0x5942; // "YB"
 
         // ---- MEMBERS ------------------------------------------------------------------------------------------------
 
         private readonly ByamlSerializerSettings _settings;
 
         private ByamlVersion _currentReadVersion;
+        private bool _currentReadSupportsPaths;
 
         private List<string> _nameArray;
         private List<string> _stringArray;
@@ -30,7 +32,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
 
         // ---- CONSTRUCTORS & DESTRUCTOR ------------------------------------------------------------------------------
 
-        private ByamlFile(ByamlSerializerSettings settings)
+        private ByamlFile(ByamlSerializerSettings settings = null)
         {
             _settings = settings;
         }
@@ -41,13 +43,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
         /// Deserializes and returns the dynamic value of the BYAML node read from the given file.
         /// </summary>
         /// <param name="fileName">The name of the file to read the data from.</param>
-        /// <param name="settings">The <see cref="ByamlSerializerSettings"/> used to configure how the BYAML will be
-        /// deserialized.</param>
-        public static dynamic Load(string fileName, ByamlSerializerSettings settings)
+        public static dynamic Load(string fileName)
         {
             using (FileStream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                return Load(stream, settings);
+                return Load(stream);
             }
         }
 
@@ -55,11 +55,9 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
         /// Deserializes and returns the dynamic value of the BYAML node read from the specified stream.
         /// </summary>
         /// <param name="stream">The <see cref="Stream"/> to read the data from.</param>
-        /// <param name="settings">The <see cref="ByamlSerializerSettings"/> used to configure how the BYAML will be
-        /// deserialized.</param>
-        public static dynamic Load(Stream stream, ByamlSerializerSettings settings)
+        public static dynamic Load(Stream stream)
         {
-            ByamlFile byamlFile = new ByamlFile(settings);
+            ByamlFile byamlFile = new ByamlFile();
             return byamlFile.Read(stream);
         }
 
@@ -149,40 +147,76 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             // Open a reader on the given stream.
             using (BinaryDataReader reader = new BinaryDataReader(stream, Encoding.UTF8, true))
             {
-                reader.ByteOrder = _settings.ByteOrder;
-
                 // Load the header, specifying magic bytes ("BY"), version and main node offsets.
-                if (reader.ReadUInt16() != _magicBytes)
+                
+                // Default to big endian.
+                reader.ByteOrder = ByteOrder.BigEndian;
+
+                ushort magic = reader.ReadUInt16();
+                if (magic == _magicBytes)
+                {
+                    // We already are set to big endian.
+                }
+                else if (magic == _magicBytesLittle)
+                {
+                    reader.ByteOrder = ByteOrder.LittleEndian;
+                }
+                else
                 {
                     throw new ByamlException("Invalid BYAML header.");
                 }
-                
+
                 ushort version = reader.ReadUInt16();
                 if (version > (ushort)ByamlVersion.Four)
                 {
                     throw new ByamlException($"Unsupported BYAML version '{version}'.");
                 }
                 
-                if (_settings.Version.HasValue && (ByamlVersion)version != _settings.Version)
-                {
-                    throw new ByamlException($"Unexpected BYAML version '{version}'.");
-                }
-
-                if (version != (ushort)ByamlVersion.One && _settings.SupportsBinaryData)
-                {
-                    throw new ByamlException("SupportsBinaryData is only used with BYAML version 1.");
-                }
-
                 _currentReadVersion = (ByamlVersion)version;
                 
                 uint nameArrayOffset = reader.ReadUInt32();
                 uint stringArrayOffset = reader.ReadUInt32();
                 uint dataArrayOffset = 0;
-                if (_settings.SupportsBinaryData)
+                uint rootNodeOffset = 0;
+
+                if (_currentReadVersion == ByamlVersion.One)
                 {
-                    dataArrayOffset = reader.ReadUInt32();
+                    uint possibleDataArrayOfs = reader.ReadUInt32();
+
+                    // If this is zero, the game that uses this BYAML supports binary data, but this BYAML does
+                    // not use them at all.
+                    if (possibleDataArrayOfs == 0)
+                    {
+                        dataArrayOffset = 0;
+                        rootNodeOffset = reader.ReadUInt32();
+                    }
+                    else
+                    {
+                        // Seek to the node referenced by this offset.
+                        byte nodeType;
+                        using (reader.TemporarySeek(possibleDataArrayOfs, SeekOrigin.Begin))
+                        {
+                            nodeType = reader.ReadByte();
+                        }
+                        
+                        if (nodeType == (byte)ByamlNodeType.BinaryDataArray)
+                        {
+                            // There is a data array.
+                            dataArrayOffset = possibleDataArrayOfs;
+                            rootNodeOffset = reader.ReadUInt32();
+                        }
+                        else
+                        {
+                            // This BYAML does not support binary data.
+                            dataArrayOffset = 0;
+                            rootNodeOffset = possibleDataArrayOfs;
+                        }
+                    }
                 }
-                uint rootNodeOffset = reader.ReadUInt32();
+                else
+                {
+                    rootNodeOffset = reader.ReadUInt32();
+                }
 
                 // Read the name array, holding strings referenced by index for the names of other nodes.
                 reader.Seek(nameArrayOffset, SeekOrigin.Begin);
@@ -196,8 +230,10 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 }
                 
                 // Read the optional binary data array, holding data referenced by index in binary data nodes.
-                if (_settings.SupportsBinaryData && dataArrayOffset != 0)
+                if (dataArrayOffset != 0)
                 {
+                    _currentReadSupportsPaths = true;
+                    
                     // The third offset is the root node, so just read that and we're done.
                     reader.Seek(dataArrayOffset, SeekOrigin.Begin);
                     _binaryDataArray = ReadNode(reader);
@@ -233,7 +269,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 {
                     reader.Seek(-1);
                 }
-                int length = (int)Get3LsbBytes(reader.ReadUInt32());
+                int length = (int)Get3LsbBytes(reader.ReadUInt32(), reader.ByteOrder);
                 dynamic value = null;
                 switch (nodeType)
                 {
@@ -267,7 +303,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     case ByamlNodeType.StringIndex:
                         return _stringArray[reader.ReadInt32()];
                     case ByamlNodeType.BinaryData:
-                        if (_currentReadVersion == ByamlVersion.One && _settings.SupportsBinaryData)
+                        if (_currentReadVersion == ByamlVersion.One && _currentReadSupportsPaths)
                         {
                             return _binaryDataArray[reader.ReadInt32()];
                         }
@@ -327,8 +363,8 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             for (int i = 0; i < length; i++)
             {
                 uint indexAndType = reader.ReadUInt32();
-                int nodeNameIndex = (int)Get3MsbBytes(indexAndType);
-                ByamlNodeType nodeType = (ByamlNodeType)Get1MsbByte(indexAndType);
+                int nodeNameIndex = (int)Get3MsbBytes(indexAndType, reader.ByteOrder);
+                ByamlNodeType nodeType = (ByamlNodeType)Get1MsbByte(indexAndType, reader.ByteOrder);
                 string nodeName = _nameArray[nodeNameIndex];
                 dictionary.Add(nodeName, ReadNode(reader, nodeType));
             }
@@ -404,12 +440,6 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             if (!(root is IDictionary<string, dynamic> || root is IEnumerable))
             {
                 throw new ByamlException($"Type '{root.GetType()}' is not supported as a BYAML root node.");
-            }
-            
-            if (!_settings.Version.HasValue)
-            {
-                throw new ByamlException(
-                    "Version must be specified in ByamlSerializerSettings when serializing a BYAML.");
             }
 
             if (_settings.Version != ByamlVersion.One && _settings.SupportsBinaryData)
@@ -720,7 +750,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
         
         private void EnforceMinimumVersionWrite(ByamlNodeType nodeType, ByamlVersion minimumVersion)
         {
-            EnforceMinimumVersion(nodeType, _settings.Version.Value, minimumVersion);
+            EnforceMinimumVersion(nodeType, _settings.Version, minimumVersion);
         }
 
         // ---- Helper methods ----
@@ -755,9 +785,9 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             }
         }
 
-        private uint Get1MsbByte(uint value)
+        private uint Get1MsbByte(uint value, ByteOrder byteOrder)
         {
-            if (_settings.ByteOrder == ByteOrder.BigEndian)
+            if (byteOrder == ByteOrder.BigEndian)
             {
                 return value & 0x000000FF;
             }
@@ -767,9 +797,9 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             }
         }
 
-        private uint Get3LsbBytes(uint value)
+        private uint Get3LsbBytes(uint value, ByteOrder byteOrder)
         {
-            if (_settings.ByteOrder == ByteOrder.BigEndian)
+            if (byteOrder == ByteOrder.BigEndian)
             {
                 return value & 0x00FFFFFF;
             }
@@ -779,9 +809,9 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             }
         }
 
-        private uint Get3MsbBytes(uint value)
+        private uint Get3MsbBytes(uint value, ByteOrder byteOrder)
         {
-            if (_settings.ByteOrder == ByteOrder.BigEndian)
+            if (byteOrder == ByteOrder.BigEndian)
             {
                 return value >> 8;
             }

@@ -4,7 +4,7 @@ using OatmealDome.BinaryData;
 namespace OatmealDome.NinLib.Byaml
 {
     /// <summary>
-    /// Represents options to control the serialization process of a <see cref="ByamlSerializer"/>.
+    /// Represents options to control the serialization process of a BYAML.
     /// </summary>
     public class ByamlSerializerSettings
     {
@@ -35,10 +35,8 @@ namespace OatmealDome.NinLib.Byaml
 
         /// <summary>
         /// Gets or sets the version of the BYAML file to write or expect.
-        /// It is not necessary to specify this when deserializing a BYAML. However, if it is set, the deserializer
-        /// will check to ensure that the version specified matches the version of the BYAML.
         /// </summary>
-        public ByamlVersion? Version { get; set; }
+        public ByamlVersion Version { get; set; }
 
     }
 }
