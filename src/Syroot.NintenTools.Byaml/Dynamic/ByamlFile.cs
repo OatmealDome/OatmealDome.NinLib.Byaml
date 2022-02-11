@@ -310,8 +310,11 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                         
                         EnforceMinimumVersionRead(nodeType, ByamlVersion.Four);
                         
-                        int length = reader.ReadInt32();
-                        return ReadComplexValueNode(reader, r => r.ReadBytes(length));
+                        return ReadComplexValueNode(reader, r =>
+                        {
+                            int length = r.ReadInt32();
+                            return r.ReadBytes(length);
+                        });
                     case ByamlNodeType.Boolean:
                         return reader.ReadInt32() != 0;
                     case ByamlNodeType.Int32:
@@ -547,8 +550,6 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     }
                     
                     EnforceMinimumVersionWrite(type, ByamlVersion.Four);
-                    
-                    writer.Write((int)value.Length);
                     return writer.ReserveOffset();
                 case ByamlNodeType.Dictionary:
                 case ByamlNodeType.Array:
@@ -588,6 +589,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             switch (type)
             {
                 case ByamlNodeType.BinaryData:
+                    writer.Write((int)value.Length);
                     writer.Write(value);
                     break;
                 case ByamlNodeType.Dictionary:
