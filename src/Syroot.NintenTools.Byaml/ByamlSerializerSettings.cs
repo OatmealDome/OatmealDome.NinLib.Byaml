@@ -17,6 +17,7 @@ namespace OatmealDome.NinLib.Byaml
         public ByamlSerializerSettings()
         {
             ByteOrder = ByteOrder.BigEndian;
+            SupportsBinaryData = false;
             Version = ByamlVersion.One;
         }
 
