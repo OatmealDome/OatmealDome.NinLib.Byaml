@@ -774,6 +774,10 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 else if (node is bool) return ByamlNodeType.Boolean;
                 else if (node is int) return ByamlNodeType.Int32;
                 else if (node is float) return ByamlNodeType.Float;
+                else if (node is uint) return ByamlNodeType.UInt32;
+                else if (node is long) return ByamlNodeType.Int32;
+                else if (node is ulong) return ByamlNodeType.UInt64;
+                else if (node is double) return ByamlNodeType.Double;
                 else if (node == null) return ByamlNodeType.Null;
                 else throw new ByamlException($"Type '{node.GetType()}' is not supported as a BYAML node.");
             }
