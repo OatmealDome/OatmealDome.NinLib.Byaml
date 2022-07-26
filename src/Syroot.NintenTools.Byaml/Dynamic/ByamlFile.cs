@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -218,9 +218,12 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                     rootNodeOffset = reader.ReadUInt32();
                 }
 
-                // Read the name array, holding strings referenced by index for the names of other nodes.
-                reader.Seek(nameArrayOffset, SeekOrigin.Begin);
-                _nameArray = ReadNode(reader);
+                // Read the optional name array, holding strings referenced by index for the names of other nodes.
+                if (nameArrayOffset != 0)
+                {
+                    reader.Seek(nameArrayOffset, SeekOrigin.Begin);
+                    _nameArray = ReadNode(reader);
+                }
 
                 // Read the optional string array, holding strings referenced by index in string nodes.
                 if (stringArrayOffset != 0)
