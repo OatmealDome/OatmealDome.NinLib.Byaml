@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -167,7 +167,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 }
 
                 ushort version = reader.ReadUInt16();
-                if (version > (ushort)ByamlVersion.Four)
+                if (version > (ushort)ByamlVersion.Seven)
                 {
                     throw new ByamlException($"Unsupported BYAML version '{version}'.");
                 }
