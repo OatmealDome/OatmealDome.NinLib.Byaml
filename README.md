@@ -8,7 +8,7 @@ Please note that while reading has been well tested, writing has not. There may 
 
 Here's what's different:
 
-* BYAML versions 1, 2, 3, and 4 are all supported. BYAML version 5 support will come when an example BYAML file becomes available.
+* BYAML versions 1, 2, 3, and 4 are all fully supported. It is possible to deserialize BYAML versions 5, but it is not possible to serialize it. Experimental deserialization is available for BYAML versions 6 and 7. (New node types may not be available.)
 * ``ByamlFile.Load()`` now automatically detects BYAML version, whether binary data is present with BYAML version 1, and what endianness the BYAML is stored in.
 * ``ByamlFile.Save()`` now uses ``ByamlSerializerSettings`` to hold serialization settings.
 * "Paths" has been changed to generic binary data (``byte[]``). Automatic deserialization of Mario Kart 8 path points (``ByamlPathPoint``) is no longer supported.
