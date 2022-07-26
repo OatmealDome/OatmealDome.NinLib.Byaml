@@ -315,6 +315,18 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                             int length = r.ReadInt32();
                             return r.ReadBytes(length);
                         });
+                    case ByamlNodeType.BinaryDataWithUnknownParameter:
+                        EnforceMinimumVersionRead(nodeType, ByamlVersion.Five);
+                        
+                        return ReadComplexValueNode(reader, r =>
+                        {
+                            int length = r.ReadInt32();
+                            
+                            // TODO: Figure out what the unknown parameter is and handle it properly
+                            int unknownParameter = r.ReadInt32();
+                            
+                            return r.ReadBytes(length);
+                        });
                     case ByamlNodeType.Boolean:
                         return reader.ReadInt32() != 0;
                     case ByamlNodeType.Int32:
@@ -443,6 +455,12 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             if (!(root is IDictionary<string, dynamic> || root is IEnumerable))
             {
                 throw new ByamlException($"Type '{root.GetType()}' is not supported as a BYAML root node.");
+            }
+
+            if (_settings.Version == ByamlVersion.Five)
+            {
+                throw new ByamlException(
+                    $"Serialization of BYAML version '{(ushort)_settings.Version}' is not supported.");
             }
 
             if (_settings.Version != ByamlVersion.One && _settings.SupportsBinaryData)
@@ -769,6 +787,7 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
             {
                 if (node is string) return ByamlNodeType.StringIndex;
                 else if (node is byte[]) return ByamlNodeType.BinaryData;
+                // TOOD: BinaryDataWithUnknownParameter
                 else if (node is IDictionary<string, dynamic>) return ByamlNodeType.Dictionary;
                 else if (node is IEnumerable) return ByamlNodeType.Array;
                 else if (node is bool) return ByamlNodeType.Boolean;

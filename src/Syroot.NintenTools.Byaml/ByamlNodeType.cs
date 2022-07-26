@@ -18,6 +18,11 @@ namespace OatmealDome.NinLib.Byaml
         /// Only present in Mario Kart 8's BYAML files and BYAML versions 4 and newer.
         /// </summary>
         BinaryData = 0xA1,
+        
+        /// <summary>
+        /// The node represents an array of <see cref="byte"/>s with an unknown <see cref="int"/> parameter.
+        /// </summary>
+        BinaryDataWithUnknownParameter = 0xA2,
 
         /// <summary>
         /// The node represents an array of dynamic child instances.

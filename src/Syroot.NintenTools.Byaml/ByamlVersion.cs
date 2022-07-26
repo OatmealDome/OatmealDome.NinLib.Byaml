@@ -23,6 +23,11 @@ namespace OatmealDome.NinLib.Byaml
         /// <summary>
         /// Format version 4, as found in Animal Crossing: New Horizons.
         /// </summary>
-        Four = 4
+        Four = 4,
+        
+        /// <summary>
+        /// Format version 5, as found in an unknown Switch game. Listed on Kinnay's Nintendo File Formats wiki.
+        /// </summary>
+        Five = 5,
     }
 }
