@@ -29,5 +29,15 @@ namespace OatmealDome.NinLib.Byaml
         /// Format version 5, as found in an unknown Switch game. Listed on Kinnay's Nintendo File Formats wiki.
         /// </summary>
         Five = 5,
+        
+        /// <summary>
+        /// Format version 6, implied to exist by format version 7.
+        /// </summary>
+        Six = 6,
+        
+        /// <summary>
+        /// Format version 7, as found in Nintendo Switch Sports.
+        /// </summary>
+        Seven = 7
     }
 }

@@ -457,7 +457,8 @@ namespace OatmealDome.NinLib.Byaml.Dynamic
                 throw new ByamlException($"Type '{root.GetType()}' is not supported as a BYAML root node.");
             }
 
-            if (_settings.Version == ByamlVersion.Five)
+            if (_settings.Version == ByamlVersion.Five || _settings.Version == ByamlVersion.Six ||
+                _settings.Version == ByamlVersion.Seven)
             {
                 throw new ByamlException(
                     $"Serialization of BYAML version '{(ushort)_settings.Version}' is not supported.");
